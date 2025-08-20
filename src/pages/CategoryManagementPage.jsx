@@ -13,6 +13,7 @@ const CategoryManagementPage = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [categoryName, setCategoryName] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
+	const [errorMessage, setErrorMessage] = useState('');
 
 	useEffect(() => {
 		fetchCategories();
@@ -39,17 +40,22 @@ const CategoryManagementPage = () => {
 	const openModalForCreate = () => {
 		setSelectedCategory(null);
 		setCategoryName('');
+		setErrorMessage('');
 		setIsModalOpen(true);
 	};
 
 	const openModalForEdit = (category) => {
 		setSelectedCategory(category);
 		setCategoryName(category.categoryName);
+		setErrorMessage('');
 		setIsModalOpen(true);
 	};
 
 	const handleSaveCategory = async () => {
-		if (!categoryName.trim()) return;
+		if (!categoryName.trim()) {
+			setErrorMessage('Category name is required');
+			return;
+		}
 
 		try {
 			setIsLoading(true);
@@ -145,12 +151,9 @@ const CategoryManagementPage = () => {
 										</td>
 										<td className='px-6 py-3 flex justify-center space-x-2'>
 											<button
-												onClick={() => {
-													openModalForEdit(cat);
-													setCategoryName(
-														cat.categoryName
-													);
-												}}>
+												onClick={() =>
+													openModalForEdit(cat)
+												}>
 												<PencilIcon className='h-5 w-5 text-green-500 hover:text-green-700 transition' />
 											</button>
 											<button
@@ -197,11 +200,21 @@ const CategoryManagementPage = () => {
 								type='text'
 								placeholder='Category Name'
 								value={categoryName}
-								onChange={(e) =>
-									setCategoryName(e.target.value)
-								}
-								className='w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition'
+								onChange={(e) => {
+									setCategoryName(e.target.value);
+									setErrorMessage('');
+								}}
+								className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition ${
+									errorMessage
+										? 'border-red-500 focus:ring-red-500'
+										: 'border-gray-300 focus:ring-blue-500'
+								}`}
 							/>
+							{errorMessage && (
+								<p className='text-red-500 text-sm'>
+									{errorMessage}
+								</p>
+							)}
 							<button
 								onClick={handleSaveCategory}
 								className='w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition'>

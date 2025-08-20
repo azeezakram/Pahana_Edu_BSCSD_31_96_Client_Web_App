@@ -18,6 +18,7 @@ const StaffManagementPage = () => {
     isActive: true,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [nameError, setNameError] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
@@ -44,13 +45,20 @@ const StaffManagementPage = () => {
   };
 
   const validatePassword = (password) => {
+    if (!password) return "Password is required";
     if (password.length < 6) return "Password must be at least 6 characters";
     if (!/[A-Z]/.test(password))
       return "Password must contain at least one uppercase letter";
     if (!/[a-z]/.test(password))
       return "Password must contain at least one lowercase letter";
-    if (!/[0-9]/.test(password))
-      return "Password must contain at least one digit";
+    if (!/[0-9]/.test(password)) return "Password must contain at least one digit";
+    return "";
+  };
+
+  const validateUsername = (username) => {
+    if (!username.trim()) return "Username is required";
+    const invalidChars = /[\/"' ]/; // / " ' and space not allowed
+    if (invalidChars.test(username)) return "Username cannot contain / \" ' or space";
     return "";
   };
 
@@ -62,6 +70,7 @@ const StaffManagementPage = () => {
       password: "",
       isActive: true,
     });
+    setNameError("");
     setUsernameError("");
     setPasswordError("");
     setIsModalOpen(true);
@@ -75,26 +84,46 @@ const StaffManagementPage = () => {
       password: "",
       isActive: staffMember.isActive,
     });
+    setNameError("");
     setUsernameError("");
     setPasswordError("");
     setIsModalOpen(true);
   };
 
   const handleSaveStaff = async () => {
-    if (!formData.name.trim() || !formData.username.trim()) return;
+    let hasError = false;
 
-    // validate password if creating OR updating with a new password
+    // Reset previous errors
+    setNameError("");
+    setUsernameError("");
+    setPasswordError("");
+
+    // Validate Name
+    if (!formData.name.trim()) {
+      setNameError("Name is required");
+      hasError = true;
+    }
+
+    // Validate Username
+    const usernameErr = validateUsername(formData.username);
+    if (usernameErr) {
+      setUsernameError(usernameErr);
+      hasError = true;
+    }
+
+    // Validate Password only when creating OR updating with a new password
     if (!selectedStaff || (selectedStaff && formData.password.trim())) {
       const pwdError = validatePassword(formData.password);
       if (pwdError) {
         setPasswordError(pwdError);
-        return;
+        hasError = true;
       }
     }
 
+    if (hasError) return;
+
     try {
       setIsLoading(true);
-      setUsernameError("");
 
       const url = selectedStaff
         ? "http://localhost:8080/PahanaEdu_CL_BSCSD_31_96_war/api/staff"
@@ -174,21 +203,11 @@ const StaffManagementPage = () => {
           <table className="min-w-full table-auto border-collapse">
             <thead className="bg-gray-100 sticky top-0">
               <tr>
-                <th className="px-6 py-3 text-left font-medium text-gray-700">
-                  ID
-                </th>
-                <th className="px-6 py-3 text-left font-medium text-gray-700">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left font-medium text-gray-700">
-                  Username
-                </th>
-                <th className="px-6 py-3 text-center font-medium text-gray-700">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-center font-medium text-gray-700">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left font-medium text-gray-700">ID</th>
+                <th className="px-6 py-3 text-left font-medium text-gray-700">Name</th>
+                <th className="px-6 py-3 text-left font-medium text-gray-700">Username</th>
+                <th className="px-6 py-3 text-center font-medium text-gray-700">Status</th>
+                <th className="px-6 py-3 text-center font-medium text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -250,31 +269,41 @@ const StaffManagementPage = () => {
               </button>
             </div>
             <div className="space-y-4">
+              {/* Name */}
               <input
                 type="text"
                 placeholder="Name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  setNameError("");
+                }}
+                className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition ${
+                  nameError
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-blue-500"
+                }`}
               />
+              {nameError && <p className="text-red-500 text-sm">{nameError}</p>}
+
+              {/* Username */}
               <input
                 type="text"
                 placeholder="Username"
                 value={formData.username}
-                onChange={(e) =>
-                  setFormData({ ...formData, username: e.target.value })
-                }
+                onChange={(e) => {
+                  setFormData({ ...formData, username: e.target.value });
+                  setUsernameError("");
+                }}
                 className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition ${
                   usernameError
                     ? "border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:ring-blue-500"
                 }`}
               />
-              {usernameError && (
-                <p className="text-red-500 text-sm">{usernameError}</p>
-              )}
+              {usernameError && <p className="text-red-500 text-sm">{usernameError}</p>}
+
+              {/* Password */}
               <input
                 type="password"
                 placeholder="Password"
@@ -289,9 +318,9 @@ const StaffManagementPage = () => {
                     : "border-gray-300 focus:ring-blue-500"
                 }`}
               />
-              {passwordError && (
-                <p className="text-red-500 text-sm">{passwordError}</p>
-              )}
+              {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+
+              {/* Active */}
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -302,6 +331,8 @@ const StaffManagementPage = () => {
                 />
                 <span>Active</span>
               </div>
+
+              {/* Save */}
               <button
                 onClick={handleSaveStaff}
                 className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
