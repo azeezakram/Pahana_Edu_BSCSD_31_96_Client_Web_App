@@ -33,38 +33,43 @@ const ItemManagementPage = () => {
   }, []);
 
   const fetchItems = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch(
-        "http://localhost:8080/PahanaEdu_CL_BSCSD_31_96_war/api/item/",
-        {
-          credentials: "include",
-        }
-      );
-      const data = await res.json();
-      setItems(data);
-      setIsError(false);
-    } catch (e) {
-      console.error("Error fetching items:", e);
-      setIsError(true);
-    }
-    setIsLoading(false);
-  };
+  setIsLoading(true);
+  try {
+    const res = await fetch(
+      "http://localhost:8080/PahanaEdu_CL_BSCSD_31_96_war/api/item/",
+      { credentials: "include" }
+    );
 
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch(
-        "http://localhost:8080/PahanaEdu_CL_BSCSD_31_96_war/api/category/",
-        {
-          credentials: "include",
-        }
-      );
-      const data = await res.json();
-      setCategories(data);
-    } catch (e) {
-      console.error("Error fetching categories:", e);
-    }
-  };
+    if (!res.ok) throw new Error("Failed to fetch items");
+
+    const text = await res.text(); // get raw response
+    const data = text ? JSON.parse(text) : []; // parse only if not empty
+    setItems(data);
+    setIsError(false);
+  } catch (e) {
+    console.error("Error fetching items:", e);
+    setIsError(true);
+  }
+  setIsLoading(false);
+};
+
+const fetchCategories = async () => {
+  try {
+    const res = await fetch(
+      "http://localhost:8080/PahanaEdu_CL_BSCSD_31_96_war/api/category/",
+      { credentials: "include" }
+    );
+
+    if (!res.ok) throw new Error("Failed to fetch categories");
+
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : [];
+    setCategories(data);
+  } catch (e) {
+    console.error("Error fetching categories:", e);
+  }
+};
+
 
   const filteredItems = items
     .slice()

@@ -29,12 +29,16 @@ const SalesHistoryPage = () => {
 				'http://localhost:8080/PahanaEdu_CL_BSCSD_31_96_war/api/sales-history?includeItems=true',
 				{ credentials: 'include' }
 			);
-			if (res.ok) {
-				const data = await res.json();
-				setSalesHistories(data);
-			}
+
+			if (!res.ok) throw new Error('Failed to fetch sales history');
+
+			const text = await res.text();
+			const data = text ? JSON.parse(text) : [];
+
+			setSalesHistories(data);
 		} catch (err) {
-			console.error(err);
+			console.error('Error fetching sales history:', err);
+			setSalesHistories([]); // ensure UI doesn't break
 		} finally {
 			setIsLoading(false);
 		}
@@ -260,7 +264,8 @@ const SalesHistoryPage = () => {
 													{item.item?.id || 'N/A'}
 												</td>
 												<td className='px-4 py-2'>
-													{item.item?.itemName || 'N/A'}
+													{item.item?.itemName ||
+														'N/A'}
 												</td>
 												<td className='px-4 py-2 text-center'>
 													{item.unit}
@@ -288,7 +293,9 @@ const SalesHistoryPage = () => {
 								Grand Total:{' '}
 								{(selectedHistory.grandTotal / 100).toFixed(2)}
 							</div>
-							<div className='font-medium text-[0.9rem] hover:underline' onClick={() => printBill(selectedHistory)}>
+							<div
+								className='font-medium text-[0.9rem] hover:underline'
+								onClick={() => printBill(selectedHistory)}>
 								Print bill
 							</div>
 						</div>
